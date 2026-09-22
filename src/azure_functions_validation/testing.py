@@ -83,7 +83,8 @@ class MockHttpRequest(HttpRequest):
         resolved_headers = dict(headers or {})
         if json is not _UNSET:
             encoded = _json.dumps(json).encode("utf-8")
-            resolved_headers.setdefault("Content-Type", _JSON_CONTENT_TYPE)
+            if not any(k.lower() == "content-type" for k in resolved_headers):
+                resolved_headers["Content-Type"] = _JSON_CONTENT_TYPE
         elif isinstance(body, str):
             encoded = body.encode("utf-8")
         elif body is None:

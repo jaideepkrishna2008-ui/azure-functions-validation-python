@@ -45,11 +45,27 @@ class TestMockHttpRequestConstruction:
         request = MockHttpRequest(json=None)
         assert request.get_body() == b"null"
 
-    def test_explicit_content_type_is_preserved(self) -> None:
-        request = MockHttpRequest(
-            json={"a": 1}, headers={"Content-Type": "application/vnd.custom+json"}
-        )
-        assert request.headers["Content-Type"] == "application/vnd.custom+json"
+    @pytest.mark.parametrize("header_name", ["Content-Type", "content-type", "cOnTeNt-TyPe"])
+    def test_explicit_content_type_is_preserved(self, header_name: str) -> None:
+        custom_type = "application/vnd.custom+json"
+        input_headers = {header_name: custom_type, "X-Trace": "abc"}
+        original_input = dict(input_headers)
+        request = MockHttpRequest(json={"a": 1}, headers=input_headers)
+
+        # Input headers mapping must not be modified by default insertion
+        assert input_headers == original_input
+
+        # Preserves the custom media type regardless of casing
+        matching_headers = [
+            (k, v) for k, v in request.headers.items() if k.lower() == "content-type"
+        ]
+        assert len(matching_headers) == 1
+        assert matching_headers[0][1] == custom_type
+        assert request.headers.get(header_name) == custom_type
+
+        # Unrelated headers and body encoding remain unchanged
+        assert request.headers["X-Trace"] == "abc"
+        assert request.get_json() == {"a": 1}
 
     def test_str_body_is_utf8_encoded(self) -> None:
         request = MockHttpRequest(body="héllo")
