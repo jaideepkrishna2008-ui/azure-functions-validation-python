@@ -43,6 +43,10 @@ make cov         # Run tests with coverage
 make check-all   # Run the full local gate
 ```
 
+Before opening a PR, run `make format-check` to check `src` and `tests` without
+changing files. Run `make format` to fix those trees. CI also checks every
+changed Python file, including files outside `src` and `tests`.
+
 ## GitHub Actions Pinning
 
 All external `uses:` references in `.github/workflows/` MUST pin to a
